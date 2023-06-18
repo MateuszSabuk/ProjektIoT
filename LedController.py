@@ -41,7 +41,7 @@ class LedController:
         """Wyłącza podany kolor"""
         gpio.output(self.leds[led_color], gpio.LOW)
 
-    def off_all(self, led_color):
+    def off_all(self):
         """Wyłącza diodę"""
         for color, led in self.leds.items():
             self.off(color)
