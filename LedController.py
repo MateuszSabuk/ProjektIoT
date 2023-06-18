@@ -53,7 +53,7 @@ class LedController:
         for color, led in self.leds.items():
             self.off(color)
 
-    def roll_leds(self, chosen_colors=None, roll_time=1):
+    def roll_leds(self, chosen_colors=None, roll_time=1.0):
         """
         chosen_colors domyślnie jest listą wszystkich kolorów
         Zmienia kolory leda, co << roll_time >>
