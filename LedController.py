@@ -1,5 +1,6 @@
 import RPi.GPIO as gpio
 import time
+import threading
 
 
 class LedColors:
@@ -16,12 +17,18 @@ class LedController:
 
     def __init__(self, rgb_pins) -> None:
         red_pin, green_pin, blue_pin = rgb_pins
+        self.stop_roll = True
         self.colors = LedColors()
         self.leds = {
             self.colors.RED: red_pin,
             self.colors.GREEN: green_pin,
             self.colors.BLUE: blue_pin,
         }
+        # self.currently_on = {
+        #     self.colors.RED: False,
+        #     self.colors.GREEN: False,
+        #     self.colors.BLUE: False,
+        # }
         for pin in self.leds.values():
             gpio.setup(pin, gpio.OUT)
 
@@ -46,18 +53,22 @@ class LedController:
         for color, led in self.leds.items():
             self.off(color)
 
-    def roll_leds(self, break_pin, roll_time=1):
+    def roll_leds(self, chosen_colors=None, roll_time=1):
         """
-        Zmienia kolory leda, co << roll_time >> \\
-        Sygnał na pinie << break_pin >> przerywa pętlę
+        chosen_colors domyślnie jest listą wszystkich kolorów
+        Zmienia kolory leda, co << roll_time >>
         """
-        gpio.setup(break_pin, gpio.IN)
-        breaked = False
-        # TODO Opcjonalne breaked jako przerwanie
-        while not breaked:
-            for color in self.colors.get_list():
-                self.on_single(color)
-                breaked = gpio.input(break_pin)
-                if breaked:
-                    break
-                time.sleep(roll_time)
+
+        def roll(colors_list):
+            self.stop_roll = False
+            if colors_list == None:
+                colors_list = self.colors.get_list()
+            while not self.stop_roll:
+                for color in colors_list:
+                    if self.stop_roll:
+                        break
+                    self.on_single(color)
+                    time.sleep(roll_time)
+
+        th = threading.Thread(daemon=True, target=roll, args=[chosen_colors])
+        th.start()
