@@ -6,7 +6,7 @@ class LedColors:
     RED = "red"
     GREEN = "green"
     BLUE = "blue"
-    
+
     def get_list(self):
         return [self.RED, self.GREEN, self.BLUE]
 
@@ -40,6 +40,11 @@ class LedController:
     def off(self, led_color):
         """Wyłącza podany kolor"""
         gpio.output(self.leds[led_color], gpio.LOW)
+
+    def off_all(self, led_color):
+        """Wyłącza diodę"""
+        for color, led in self.leds.items():
+            self.off(color)
 
     def roll_leds(self, break_pin, roll_time=1):
         """
