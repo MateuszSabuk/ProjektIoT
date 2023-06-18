@@ -76,9 +76,11 @@ class LedController:
         th = threading.Thread(daemon=True, target=roll, args=[chosen_colors])
         th.start()
 
-    def blink(self, color, light_time: int = 1, dark_time: int = 1):
+    def blink(
+        self, color, light_time: int = 1, dark_time: int = 1, roll_time: float = 1
+    ):
         """Mruga"""
         light = [color for x in range(light_time)]
         dark = [None for x in range(dark_time)]
         arr = light + dark
-        self.roll_leds(arr)
+        self.roll_leds(arr, roll_time=roll_time)

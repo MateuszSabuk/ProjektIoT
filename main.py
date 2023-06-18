@@ -33,32 +33,42 @@ mic_rising_time = None
 flame_rising_time = None
 
 
-# TODO disarm the alarm
 alarm_armed = False
 alarm_muted = True
+
+
+def reset_leds():
+    led_controller.stop_roll = True
+    if alarm_armed:
+        if alarm_muted:
+            led_controller.blink(color=colors.BLUE, light_time=1, dark_time=4)
+        else:
+            led_controller.on_single(colors.GREEN)
+    else:
+        led_controller.off_all()
 
 
 def check_alarm():
     if alarm_armed:
         # TODO add a short buzz
-        led_controller.on_single(colors.BLUE)
-        led_controller.on(colors.RED)
+        led_controller.roll_leds([colors.BLUE, colors.GREEN], roll_time=0.2)
         # wait for 20 seconds with a buzz every 2 seconds
         for i in range(10):
             # TODO buzz
             time.sleep(2)
+        led_controller.stop_roll = True
         if alarm_armed:
             start_alarm()
 
 
 def start_alarm():
-    pass  # TODO function starting an alarm
-    # red the diode
+    led_controller.blink(color=colors.RED, light_time=1, dark_time=1, roll_time=0.3)
     # start the buzzer
 
 
-def stop_alarm():
-    pass  # TODO stop alarm
+def stop_alarm():  # TODO Fuction calling this function
+    # TODO stop alarm
+    reset_leds()
 
 
 def reading_start_function(pin):
