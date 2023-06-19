@@ -1,56 +1,135 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title>Sensor Values</title>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <title>IoT</title>
+    <script src="https://cdn.jsdelivr.net/npm/date-fns@2.22.1/dist/date-fns.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.5.1/dist/chart.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@2.0.0/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
+
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        margin: 20px;
+      }
+
+      h1 {
+        text-align: center;
+      }
+
+      ul {
+        list-style: none;
+        padding: 0;
+      }
+
+      li {
+        margin-bottom: 10px;
+        padding: 10px;
+        background-color: #f3f3f3;
+        border-radius: 5px;
+      }
+    </style>
   </head>
   <body>
-    <canvas id="sensor-chart" width="800" height="400"></canvas>
+    <canvas id="temperatureChart"></canvas>
+
+    <h1>Sensor Readings</h1>
+    <ul id="sensor-list"></ul>
 
     <script>
-      // Fetch data from the /data route and create the chart
+      // Fetch data from the /data route
       fetch("/data")
         .then((response) => response.json())
-        .then((data) => createChart(data));
+        .then((data) => {
+          displayReadings(data);
+          displayTemperatureChart(data);
+        });
 
-      function createChart(data) {
-        const labels = Object.keys(data);
-        const values = Object.values(data);
+      function displayTemperatureChart(data) {
+        const temperatureChartCanvas = document
+          .getElementById("temperatureChart")
+          .getContext("2d");
 
-        const ctx = document.getElementById("sensor-chart").getContext("2d");
-        new Chart(ctx, {
+        const temperatureData = data.temperature;
+
+        const labels = temperatureData.map(
+          ([temperature, timestamp]) => new Date(timestamp * 1000)
+        );
+        const temperatureValues = temperatureData.map(
+          ([temperature]) => temperature
+        );
+
+        new Chart(temperatureChartCanvas, {
           type: "line",
           data: {
             labels: labels,
             datasets: [
               {
-                label: "Sensor Values",
-                data: values,
+                label: "Temperature",
+                data: temperatureValues,
+                borderColor: "rgb(75, 192, 192)",
                 fill: false,
-                borderColor: "blue",
-                borderWidth: 1,
               },
             ],
           },
           options: {
             responsive: true,
-            maintainAspectRatio: false,
             scales: {
               x: {
-                title: {
-                  display: true,
-                  text: "Time",
+                type: "time",
+                time: {
+                  unit: "day",
                 },
               },
               y: {
-                title: {
-                  display: true,
-                  text: "Value",
-                },
+                beginAtZero: false,
               },
             },
           },
         });
+      }
+
+      // List of readings
+      function displayReadings(data) {
+        const sensorList = document.getElementById("sensor-list");
+
+        // Extract timestamps for each sensor excluding "temperature" and handling "tilt"
+        const timestamps = Object.entries(data).flatMap(([sensor, values]) => {
+          if (sensor === "temperature") {
+            return [];
+          } else if (sensor === "tilt") {
+            timestamp2 = null;
+            return values.map((timestamp1) => ({
+              sensor,
+              timestamp1,
+              timestamp2,
+            }));
+          } else if (Array.isArray(values)) {
+            return values.map(([timestamp1, timestamp2]) => ({
+              sensor,
+              timestamp1,
+              timestamp2,
+            }));
+          } else {
+            return [{ sensor, timestamp1: values, timestamp2: null }];
+          }
+        });
+
+        // Sort the timestamps in descending order
+        timestamps.sort((a, b) => b.timestamp1 - a.timestamp1);
+
+        // Display the readings
+        timestamps
+          .slice(0, 500)
+          .forEach(({ sensor, timestamp1, timestamp2 }) => {
+            console.log(sensor, timestamp1, timestamp2);
+            const date1 = new Date(timestamp1 * 1000);
+            const date2 = timestamp2 ? new Date(timestamp2 * 1000) : null;
+            const listItem = document.createElement("li");
+            listItem.textContent = `${date1.toLocaleString()} ${
+              date2 ? "- " + date2.toLocaleString() : ""
+            }: ${sensor}`;
+            sensorList.appendChild(listItem);
+          });
       }
     </script>
   </body>
