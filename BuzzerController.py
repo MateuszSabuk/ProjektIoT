@@ -1,6 +1,7 @@
 import RPi.GPIO as GPIO  # Import GPIO library
 import time  # Import time library
 import math
+import threading
 
 
 class BuzzerController:
@@ -41,3 +42,15 @@ class BuzzerController:
 
     def stopTone(self):
         self.p.stop()
+
+    def buzz(self, seconds, tone=None):
+        if tone is None:
+            tone = self.tone1
+
+        def buzz_thread(tone):
+            tone()
+
+        th = threading.Thread(daemon=True, target=buzz_thread, args=[tone])
+        th.start()
+        time.sleep(seconds)
+        self.stopTone()
