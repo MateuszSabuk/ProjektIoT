@@ -5,7 +5,9 @@ from LedController import LedController, LedColors as colors
 from TemperatureController import TemperatureController
 from TiltController import TiltController
 from Controller import Controller
-from BuzzerController import BuzzerController
+
+# from BuzzerController import BuzzerController
+from gpiozero import Buzzer
 from flask import Flask, jsonify, render_template
 from keypad import keypad_start
 
@@ -23,9 +25,7 @@ times = {"temperature": 20, "pir": 2, "tilt": 0.1, "mic": 0.1, "flame": 1}
 GPIO.setmode(GPIO.BCM)
 GPIO.setwarnings(False)
 led_controller = LedController(rgb_pins)
-buzz = BuzzerController(
-    26,
-)
+buzzer = Buzzer(26)
 
 
 # values and timestamps
@@ -53,11 +53,11 @@ def reset_leds():
 
 def check_alarm():
     if alarm_armed:
-        # TODO add a short buzz
+        buzzer.beep()
         led_controller.roll_leds([colors.BLUE, colors.GREEN], roll_time=0.2)
         # wait for 20 seconds with a buzz every 2 seconds
         for i in range(10):
-            # TODO buzz
+            buzzer.beep()
             time.sleep(2)
         led_controller.stop_roll = True
         if alarm_armed:
@@ -66,13 +66,13 @@ def check_alarm():
 
 def start_alarm():
     led_controller.blink(color=colors.RED, light_time=1, dark_time=1, roll_time=0.3)
-    # start the buzzer
+    buzzer.on()
 
 
 def stop_alarm():
     print("Alarm stopped")
     alarm_armed = False
-    # TODO stop buzz
+    buzzer.off()
     reset_leds()
 
 
@@ -101,7 +101,7 @@ def reading_start_function(pin):
         flames = True
         for i in range(10):
             if GPIO.input(flame_pin):
-                pass  # TODO buzz
+                buzzer.beep()
             else:
                 flames = False
                 break
