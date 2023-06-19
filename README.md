@@ -28,6 +28,12 @@ buzzer_pin = 26
 
 temperatura = 4
 
+keypad
+
+If the C-Button is pressed on the keypad, the input is reset.
+If the user hits the \*-Button, the code is checked and alarm disarmed on true.
+If the user hits the A-Button, the code is checked and alarm armed on true.
+
 ## Pomocne linki
 
 - [Multithreading post](https://forums.raspberrypi.com/viewtopic.php?t=338134)
